@@ -110,6 +110,8 @@ def send_to_gratia(event):
     duration = None
     if ('start' in event) and ('end' in event):
         duration = int(math.ceil(event['end'] - event['start']))
+        if duration == 0:
+            duration = 1
         duration = 'PT%dS' % duration
 
     errorcode = event.get('CODE', '220')
