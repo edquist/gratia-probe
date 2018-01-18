@@ -561,7 +561,7 @@ def determine_host_description(classad):
         return None
 
     # Check first for SE-based matching.
-    if ('DESIRED_SEs' not in classad) or ('MATCH_GLIDEIN_SEs' not in classad):
+    if not classad.get('DESIRED_SEs') or classad.get('MATCH_GLIDEIN_SEs'):
         return host_descr
     match_se = classad['MATCH_GLIDEIN_SEs'].strip()
     for desired_se in split_re.split(classad['DESIRED_SEs']):
@@ -570,8 +570,7 @@ def determine_host_description(classad):
             return host_descr
 
     # Then check for CE-based matching.
-    if ('DESIRED_Gatekeepers' not in classad) or \
-                ('MATCH_GLIDEIN_Gatekeeper' not in classad):
+    if not classad.get('DESIRED_Gatekeepers') or not classad.get('MATCH_GLIDEIN_Gatekeeper'):
         return host_descr
     match_ce = classad['MATCH_GLIDEIN_Gatekeeper']
     for desired_ce in split_re.split(classad['DESIRED_Gatekeepers']):
@@ -601,14 +600,14 @@ def classadToJUR(classad):
         return False
            
 
-    if 'ClusterId' not in classad:
+    if not classad.get('ClusterId'):
         DebugPrint(2, "No data passed to classadToJUR: %s" % str(classad))
         raise Exception("No data passed to classadToJUR: %s" % str(classad))
     DebugPrint(5, "Creating JUR for %s" % classad['ClusterId'])
 
     cmd = os.path.split(classad.get("Cmd", "foo"))[-1]
     if cmd == "condor_dagman":
-        if 'logfile' in classad:
+        if classad.get('logfile'):
             DebugPrint(1, 'Deleting transient condor_dagman input file: '+classad["logfile"])
             file_utils.RemoveFile(classad["logfile"])
         raise IgnoreClassadException("Ignoring classad for condor_dagman monitor.")
@@ -616,14 +615,14 @@ def classadToJUR(classad):
     resource_type = "Batch"
     if classad.get("GridMonitorJob", False):
         resource_type = "GridMonitor"
-    elif 'MATCH_EXP_JOBGLIDEIN_ResourceName' in classad:
+    elif classad.get('MATCH_EXP_JOBGLIDEIN_ResourceName'):
         resource_type = 'BatchPilot'
     r = Gratia.UsageRecord(resource_type)
 
     r.GlobalJobId(classad.get("UniqGlobalJobId", ""))
 
     job_id = 'Unknown'
-    if "ProcId" in classad and int(classad["ProcId"]) > 0:
+    if classad.get("ProcId") and int(classad["ProcId"]) > 0:
         r.LocalJobId("%s.%s" % (classad["ClusterId"], classad["ProcId"]))
         job_id = "%s.%s" % (classad["ClusterId"], classad["ProcId"])
     else:
@@ -639,7 +638,7 @@ def classadToJUR(classad):
     setIfExists(r.VOName, classad, 'x509UserProxyFirstFQAN')
     setIfExists(r.ReportableVOName, classad, 'x509UserProxyVOName')
 
-    if 'GlobalJobId' in classad:
+    if classad.get('GlobalJobId'):
         r.JobName(classad["GlobalJobId"])
         job_id = classad["GlobalJobId"]
         m = global_job_id_re.match(classad['GlobalJobId'])
@@ -652,7 +651,7 @@ def classadToJUR(classad):
 
     setIfExists(r.WallDuration, classad, 'RemoteWallClockTime', "Was entered in seconds")
 
-    if 'RemoteUserCpu' in classad:
+    if classad.get('RemoteUserCpu'):
         if  invalidDuration(classad, 'RemoteUserCpu'):
             DebugPrint(1, 
                        "WARNING: INVALID DATA: Record for %s has invalid " \
@@ -663,12 +662,12 @@ def classadToJUR(classad):
     else:
         classad['RemoteUserCpu'] = 0
 
-    if 'LocalUserCpu' in classad:
+    if classad.get('LocalUserCpu'):
         r.TimeDuration(classad['LocalUserCpu'], 'LocalUserCpu')
     else:
         classad['LocalUserCpu'] = 0
 
-    if 'RemoteSysCpu' in classad:
+    if classad.get('RemoteSysCpu'):
         if  invalidDuration(classad, 'RemoteSysCpu'):
             DebugPrint(1, 
                        "WARNING: INVALID DATA: Record for %s has invalid " \
@@ -679,7 +678,7 @@ def classadToJUR(classad):
     else:
         classad['RemoteSysCpu'] = 0
 
-    if 'LocalSysCpu' in classad:
+    if classad.get('LocalSysCpu'):
         r.TimeDuration(classad['LocalSysCpu'], 'LocalSysCpu')
     else:
         classad['LocalSysCpu'] = 0
@@ -694,7 +693,7 @@ def classadToJUR(classad):
     classad['UserCpuTotal'] = classad['RemoteUserCpu'] + classad['LocalUserCpu']
     r.CpuDuration(classad['UserCpuTotal'], "user", "Was entered in seconds")
 
-    if 'CompletionDate' in classad and classad['CompletionDate'] > 0:
+    if classad.get('CompletionDate') and classad['CompletionDate'] > 0:
         if hasattr(classad, 'eval'):
             DebugPrint(5, "Current completion time: %s" % classad.eval('CompletionDate'))
             r.EndTime(classad.eval('CompletionDate'), "Was entered in seconds")
@@ -704,7 +703,7 @@ def classadToJUR(classad):
 
     setIfExists(r.StartTime, classad, 'JobStartDate', "Was entered in seconds")
 
-    if 'LastRemoteHost' in classad:
+    if classad.get('LastRemoteHost'):
         host = classad['LastRemoteHost'].split("@")[-1]
         host_descr = determine_host_description(classad)
         if host_descr:
@@ -723,15 +722,15 @@ def classadToJUR(classad):
     ArbitraryAttrslist = re.split(",?\s?", ArbitraryJobAttrs)
     DebugPrint(0, "ArbritaryList: %s" % ArbitraryAttrslist)
     for arbitraryAttr in  ArbitraryAttrslist:
-        if arbitraryAttr in classad:
+        if classad.get(arbitraryAttr):
             DebugPrint(5, "Arbitrary attribute: %s found with value %s" % (arbitraryAttr, classad.eval(str(arbitraryAttr)))) 
             r.AdditionalInfo(arbitraryAttr, classad.eval(str(arbitraryAttr)))
     ########################################################################################
-    if 'MachineAttrCpus0' in classad:
+    if classad.get('MachineAttrCpus0'):
         r.Processors(classad['MachineAttrCpus0'], metric="max")
-    elif 'MATCH_EXP_JOB_GLIDEIN_Cpus' in classad:
+    elif classad.get('MATCH_EXP_JOB_GLIDEIN_Cpus'):
         r.Processors(int(classad['MATCH_EXP_JOB_GLIDEIN_Cpus']), metric="max")
-    elif 'RequestCpus' in classad:
+    elif classad.get('RequestCpus'):
         r.Processors(classad['RequestCpus'], metric="max")
     else:
         r.Processors(1, metric="max")
@@ -746,31 +745,31 @@ def classadToJUR(classad):
         # Or error converting to int, then just ignore GPUs
         pass
 
-    if 'MyType' in classad:
+    if classad.get('MyType'):
         r.AdditionalInfo("CondorMyType", classad['MyType'])
 
-    if 'AccountingGroup' in classad:
+    if classad.get('AccountingGroup'):
         r.AdditionalInfo("AccountingGroup", classad['AccountingGroup'])
 
-    if 'ExitBySignal' in classad:
+    if classad.get('ExitBySignal'):
         if classad['ExitBySignal']:
             # Gratia expects lower-case; python produces "True".
             r.AdditionalInfo('ExitBySignal', 'true')
         else:
             r.AdditionalInfo('ExitBySignal', 'false')
-    if 'ExitSignal' in classad:
+    if classad.get('ExitSignal'):
         r.AdditionalInfo("ExitSignal", classad['ExitSignal'])
-    if 'ExitCode' in classad:
+    if classad.get('ExitCode'):
         r.AdditionalInfo("ExitCode", classad['ExitCode'])
-    if 'JobStatus' in classad:
+    if classad.get('JobStatus'):
         r.AdditionalInfo("condor.JobStatus", classad['JobStatus'])
-    if 'GratiaJobOrigin' in classad:
+    if classad.get('GratiaJobOrigin'):
         if classad['GratiaJobOrigin'] == "GRAM":
             r.Grid("OSG", "GratiaJobOrigin = GRAM")
         else:
             r.Grid("Local", "GratiaJobOrigin not GRAM")
 
-    if 'MATCH_EXP_JOBGLIDEIN_ResourceName' in classad:
+    if classad.get('MATCH_EXP_JOBGLIDEIN_ResourceName'):
         if campus_factory_usage.search(classad['MATCH_EXP_JOBGLIDEIN_ResourceName']):
             r.Grid("Campus", "Campus Factory Usage")
         elif campus_flock_usage.search(classad['MATCH_EXP_JOBGLIDEIN_ResourceName']):
@@ -778,21 +777,21 @@ def classadToJUR(classad):
         elif classad['MATCH_EXP_JOBGLIDEIN_ResourceName'] == "Local Job":
             r.Grid("Local", "Local execution based on ResourceName")
 
-    if 'JobUniverse' in classad:
+    if classad.get('JobUniverse'):
         # scheduler and local universes are always considered to be local
         if classad['JobUniverse'] == 7 or classad['JobUniverse'] == 12:
             r.Grid("Local", "Local execution based on job universe")
 
     # Jobs that are routed to other jobs should be considered local
-    if 'RoutedToJobId' in classad:
+    if classad.get('RoutedToJobId'):
         r.Grid("Local", "Source of routed job")
 
-    if 'logfile' in classad:
+    if classad.get('logfile'):
         r.AddTransientInputFile(classad["logfile"])
 
     setIfExists(r.ProjectName, classad, 'ProjectName', 'As specified in Condor submit file', True)
 
-    if 'GratiaSiteName' in classad and hasattr(classad, 'lookup'):
+    if classad.get('GratiaSiteName') and hasattr(classad, 'lookup'):
         evaluated = classad.lookup('GratiaSiteName').eval()
         if isinstance(evaluated, types.StringType):
             r.SiteName(evaluated)
@@ -873,7 +872,7 @@ def fd_to_classad(fd):
         yield add_unique_id(classad)
         
 def add_unique_id(classad):
-    if 'GlobalJobId' in classad:
+    if classad.get('GlobalJobId'):
         classad['UniqGlobalJobId'] = 'condor.%s' % classad['GlobalJobId']
         DebugPrint(6, "Unique ID: %s" % classad['UniqGlobalJobId'])
     return classad
