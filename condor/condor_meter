@@ -431,17 +431,14 @@ def process_history_fd(fd):
     return count_submit, count_found, count_alternate
 
 def setIfExists(func, classad, attr, comment=None, setstr=False):
-    try:
+    if attr in classad:
         val = classad[attr]
-    except KeyError:
-        return
-
-    if setstr:
-        val = str(val)
-    if not comment:
-        func(val)
-    else:
-        func(val, comment)
+        if setstr:
+            val = str(val)
+        if not comment:
+            func(val)
+        else:
+            func(val, comment)
 
 cream_re = re.compile("https://([A-Za-z-.0-9]+):(\d+)/ce-cream/services/CREAM2\s+(\S+)\s+\S+")
 def cream_match(match, desired):
