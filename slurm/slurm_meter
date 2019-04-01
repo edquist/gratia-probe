@@ -18,6 +18,9 @@ from gratia.common.Gratia import DebugPrint
 import time
 import optparse
 import gratia.common.Gratia as Gratia
+import gratia.common.xml_utils as xml_utils
+
+florida_user_vo_map = xml_utils.florida_user_vo_map
 
 def job_to_jur(job, server_id):
     """Convert a SLURM job record into a Gratia UsageRecord"""
@@ -215,9 +218,8 @@ class SlurmMeter(SlurmProbe):
         # don't consider jobs that have ended within the last 15 min
         # https://opensciencegrid.atlassian.net/browse/SOFTWARE-3347
         cutoff_ts = min(self.checkpoint.val, int(time.time()) - 15 * 60)
-        _local_users_ok = ['cms0001', 'cmspilot', 'grid10001', 'cmsprod', 'lcg']
         for job in self.sacct.completed_jobs(cutoff_ts):
-            if job['user'] not in _local_users_ok:
+            if job['user'] not in florida_user_vo_map:
                 continue
             r = job_to_jur(job, server_id)
             Gratia.Send(r)

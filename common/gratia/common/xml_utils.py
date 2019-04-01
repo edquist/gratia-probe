@@ -19,6 +19,14 @@ from gratia.common.debug import DebugPrint, DebugPrintTraceback
 
 Config = config.ConfigProxy()
 
+florida_user_vo_map = dict(
+    cmspilot  = ("cms", "/cms/Role=pilot/Capability=NULL"),
+    cmsprod   = ("cms", "/cms/Role=production/Capability=NULL"),
+    cms0001   = ("cms", "/cms/Role=NULL/Capability=NULL"),
+    lcg       = ("cms", "/cms/Role=lcgadmin/Capability=NULL"),
+    grid10001 = ("osg", "/osg/Role=NULL/Capability=NULL")
+)
+
 def safeEncodeXML(xmlDoc):
     if utils.pythonVersionRequire(2, 3):
         xmlOutput = xmlDoc.toxml(encoding='utf-8')
@@ -233,7 +241,7 @@ def UsageCheckXmldoc(xmlDoc, external, resourceType=None):
                 if ResourceType and ResourceType == 'Storage':
                     use_certinfo = False 
                 DebugPrint(4, 'DEBUG: Call CheckAndExtendUserIdentity')
-                id_info = CheckAndExtendUserIdentity(xmlDoc, userIdentityNodes[0], namespace, prefix, use_certinfo)
+                id_info = CheckAndExtendUserIdentity(xmlDoc, userIdentityNodes[0], namespace, prefix, use_certinfo=False)
                 DebugPrint(4, 'DEBUG: Call CheckAndExtendUserIdentity: OK')
                 if Config.get_NoCertinfoBatchRecordsAreLocal() and ResourceType and ResourceType == 'Batch' \
                     and not (id_info.has_key('has_certinfo') and id_info['has_certinfo']):
@@ -512,8 +520,12 @@ def CheckAndExtendUserIdentity(xmlDoc, userIdentityNode, namespace, prefix, use_
             VONameNodes[0].firstChild.data = vo_info['VOName']
             ReportableVONameNodes[0].firstChild.data = vo_info['ReportableVOName']
 
-    VOName = VONameNodes[0].firstChild.data
-    ReportableVOName = ReportableVONameNodes[0].firstChild.data
+    #VOName = VONameNodes[0].firstChild.data
+    #ReportableVOName = ReportableVONameNodes[0].firstChild.data
+
+    # hack for GGUS#139599: send VOName/ReportableVOName just for UFL osg/cms
+    VOName = florida_user_vo_map[LocalUserId][0]
+    ReportableVOName = florida_user_vo_map[LocalUserId][1]
 
     DebugPrint(4, 'DEBUG: final VOName = ' + VOName)
     DebugPrint(4, 'DEBUG: final ReportableVOName = ' + ReportableVOName)
