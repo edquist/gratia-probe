@@ -207,6 +207,9 @@ class SlurmMeter(SlurmProbe):
         parser.add_option("-c", "--checkpoint", help="Only reports records past"
             " checkpoint; default is to report all records.",
             default=False, action="store_true", dest="checkpoint")
+        parser.add_option("-m", "--maxrecords", help="Send at most N records"
+            " ; default is to send all records.",
+            default=-1, dest="maxrecords")
 
         # Options are stored into opts/args class variables
         return parser.parse_args()
@@ -215,14 +218,19 @@ class SlurmMeter(SlurmProbe):
         # Loop over completed jobs
         time_end = None
         server_id = self.get_db_server_id()
+        max_records = int(self.maxrecords.val)
+        sent = 0
         # don't consider jobs that have ended within the last 15 min
         # https://opensciencegrid.atlassian.net/browse/SOFTWARE-3347
         cutoff_ts = min(self.checkpoint.val, int(time.time()) - 15 * 60)
         for job in self.sacct.completed_jobs(cutoff_ts):
+            if sent >= max_records >= 0:
+                break
             if job['user'] not in florida_user_vo_map:
                 continue
             r = job_to_jur(job, server_id)
             Gratia.Send(r)
+            sent += 1
 
             # The query sorted the results by time_end, so our last value will
             # be the greatest
