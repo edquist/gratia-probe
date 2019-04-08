@@ -218,7 +218,7 @@ class SlurmMeter(SlurmProbe):
         # Loop over completed jobs
         time_end = None
         server_id = self.get_db_server_id()
-        max_records = int(self.maxrecords.val)
+        max_records = int(self.opts.maxrecords)
         sent = 0
         # don't consider jobs that have ended within the last 15 min
         # https://opensciencegrid.atlassian.net/browse/SOFTWARE-3347
