@@ -206,7 +206,7 @@ class SlurmAcctBase(object):
         cluster = re.sub('\W+', '', cluster)
         self._cluster = cluster
 
-    def completed_jobs(self, ts):
+    def completed_jobs(self, min_ts, max_ts):
         """Completed jobs, ordered by completion time"""
 
         # We need *all* job_table records for jobs which completed inside the
@@ -215,8 +215,10 @@ class SlurmAcctBase(object):
         where = '''id_job IN (
                 SELECT id_job FROM %(cluster)s_job_table
                 WHERE time_start > 0 AND time_end >= %(end)s
+                                     AND time_end <  %(max_end)s
             )
-        ''' % { 'cluster': self._cluster, 'end': long(ts) }
+        ''' % { 'cluster': self._cluster, 'end': long(min_ts),
+                'max_end': long(max_ts) }
 
         # The job is not running and has not been requeued
         having = 'MIN(j.time_end) > 0 AND MIN(j.time_start) > 0'
