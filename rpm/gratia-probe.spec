@@ -2,7 +2,7 @@ Name:               gratia-probe
 Summary:            Gratia OSG accounting system probes
 Group:              Applications/System
 Version:            1.20.8
-Release:            2.UFL_missing_certinfo%{?dist}
+Release:            3.UFL_missing_certinfo%{?dist}
 
 License:            GPL
 Group:              Applications/System
@@ -895,6 +895,9 @@ The dCache storagegroup probe for the Gratia OSG accounting system.
 
 
 %changelog
+* Tue Apr 09 2019 Carl Edquist <edquist@cs.wisc.edu> - 1.20.8-3.UFL_missing_certinfo
+- Merge fix for newer slurm from Bockjoo
+
 * Mon Apr 08 2019 Carl Edquist <edquist@cs.wisc.edu> - 1.20.8-2.UFL_missing_certinfo
 - Custom slurm probe changes to re-send UFL records with missing certinfo files
 
