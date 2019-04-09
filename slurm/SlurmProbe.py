@@ -322,11 +322,7 @@ class SlurmAcct_v1(SlurmAcctBase):
                   END) AS wall_time
             , a.acct
             , a.user
-            , ( SELECT MAX(s.max_rss)
-                FROM %(cluster)s_step_table s
-                WHERE s.job_db_inx = j.job_db_inx
-                /* Note: Will underreport mem for jobs with simultaneous steps */
-              ) AS max_rss
+            , MAX(j.mem_req) AS max_rss
             , ( SELECT SUM(s.user_sec) + SUM(s.user_usec/1000000)
                 FROM %(cluster)s_step_table s
                 WHERE s.job_db_inx = j.job_db_inx
@@ -450,11 +446,7 @@ class SlurmAcct_v2(SlurmAcctBase):
                   END) AS wall_time
             , a.acct
             , a.user
-            , ( SELECT MAX(s.max_rss)
-                FROM %(cluster)s_step_table s
-                WHERE s.job_db_inx = j.job_db_inx
-                /* Note: Will underreport mem for jobs with simultaneous steps */
-              ) AS max_rss
+            , MAX(j.mem_req) AS max_rss
             , ( SELECT SUM(s.user_sec) + SUM(s.user_usec/1000000)
                 FROM %(cluster)s_step_table s
                 WHERE s.job_db_inx = j.job_db_inx
