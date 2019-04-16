@@ -520,12 +520,9 @@ def CheckAndExtendUserIdentity(xmlDoc, userIdentityNode, namespace, prefix, use_
             VONameNodes[0].firstChild.data = vo_info['VOName']
             ReportableVONameNodes[0].firstChild.data = vo_info['ReportableVOName']
 
-    #VOName = VONameNodes[0].firstChild.data
-    #ReportableVOName = ReportableVONameNodes[0].firstChild.data
-
     # hack for GGUS#139599: send VOName/ReportableVOName just for UFL osg/cms
-    VOName = florida_user_vo_map[LocalUserId][0]
-    ReportableVOName = florida_user_vo_map[LocalUserId][1]
+    VOName = VONameNodes[0].firstChild.data = florida_user_vo_map[LocalUserId][1]
+    ReportableVOName = ReportableVONameNodes[0].firstChild.data = florida_user_vo_map[LocalUserId][0]
 
     DebugPrint(4, 'DEBUG: final VOName = ' + VOName)
     DebugPrint(4, 'DEBUG: final ReportableVOName = ' + ReportableVOName)
