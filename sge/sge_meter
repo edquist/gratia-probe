@@ -27,7 +27,11 @@
 
 
 import gratia.common.Gratia as Gratia
+import gratia.common.xml_utils as xml_utils
 import os, copy, pwd, sys, string
+
+bu_user_vo_map = xml_utils.bu_user_vo_map
+
 
 # This module requires python v2.3
 from optparse import OptionParser
@@ -284,9 +288,10 @@ class SGE:
                 
 
 '''Read in the sge file and increment the checkpoint in the checkpointfile'''
-def readsgefile(filename,docheckpoint,checkpoint,checkpointFile):
+def readsgefile(filename,docheckpoint,checkpoint,checkpointFile,max_records=-1):
     # print 'reading file',filename
     linecount = 0
+    sent = 0
     try:
         file = open(filename, "r")
     except IOError:
@@ -318,6 +323,17 @@ def readsgefile(filename,docheckpoint,checkpoint,checkpointFile):
         rec = SGE(sgeList)
         rec.printRecord()
 
+        if sent >= max_records >= 0:
+            break
+        if rec.sgeRecord['owner'] not in bu_user_vo_map:
+            continue
+
+        min_ts = 1551830400  # 2019-03-06 00:00:00 UTC
+        max_ts = 1554742800  # 2019-04-08 17:00:00 UTC
+
+        if not min_ts <= int(rec.sgeRecord['end_time']) <= max_ts:
+            continue
+
         # convert sgeRecord into Gratia UsageRecord
         gratiaRec = rec.createUsageRecord()
 
@@ -328,6 +344,7 @@ def readsgefile(filename,docheckpoint,checkpoint,checkpointFile):
 
         # send UsageRecord
         Gratia.Send(gratiaRec)
+        sent += 1
 
         if docheckpoint:      
             # Write our checkpoint to a file 
@@ -378,12 +395,16 @@ def main():
                          action="store_true", dest="checkpoint",
                          default=False,
                          help="Only reports records past checkpoint. Default is to report all records.")    
+    optParser.add_option("-m", "--maxrecords", help="Send at most N records; default is to send all records.",
+                         default=-1, dest="maxrecords")
+
 
     
     (opts, args)=optParser.parse_args()
 
     debug = opts.debug
     noGridmap = opts.noGridmap
+    max_records = int(opts.maxrecords)
 
     if noGridmap:
         gridmapFile = ""
@@ -477,7 +498,7 @@ def main():
             readsgefile(prevAccFileName,opts.checkpoint,checkpoint,checkpointFile)
             checkpoint=0
     Gratia.DebugPrint(verbose_level, "Looking at regular file. Checkpoint value at " + str(checkpoint))
-    readsgefile(accFileName,opts.checkpoint,checkpoint,checkpointFile)
+    readsgefile(accFileName,opts.checkpoint,checkpoint,checkpointFile,max_records)
             
 
     # Clean things up
