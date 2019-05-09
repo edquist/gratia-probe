@@ -400,7 +400,7 @@ def main():
                          action="store_true", dest="checkpoint",
                          default=False,
                          help="Only reports records past checkpoint. Default is to report all records.")    
-    optParser.add_option("-m", "--maxrecords", help="Send at most N records; default is to send all records.",
+    optParser.add_option("-M", "--maxrecords", help="Send at most N records; default is to send all records.",
                          default=-1, dest="maxrecords")
     optParser.add_option("-o", "--omit-jobids",
                          action="store", dest="omit_jobids", type="string",
