@@ -332,9 +332,11 @@ def readsgefile(filename,docheckpoint,checkpoint,checkpointFile,max_records=-1,o
         max_ts = 1554742800  # 2019-04-08 17:00:00 UTC
 
         if not min_ts <= int(rec.sgeRecord['end_time']) <= max_ts:
+            Gratia.DebugPrint(debug_level, "skipping job number %s: not in time range" % rec.sgeRecord['job_number'])
             continue
 
         if rec.sgeRecord['job_number'] in omit_jobids:
+            Gratia.DebugPrint(debug_level, "skipping job number %s: in omit_jobids" % rec.sgeRecord['job_number'])
             continue
 
         # convert sgeRecord into Gratia UsageRecord
