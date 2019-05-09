@@ -328,8 +328,8 @@ def readsgefile(filename,docheckpoint,checkpoint,checkpointFile,max_records=-1,o
         if rec.sgeRecord['owner'] not in bu_user_vo_map:
             continue
 
-        min_ts = 1551830400  # 2019-03-06 00:00:00 UTC
-        max_ts = 1554742800  # 2019-04-08 17:00:00 UTC
+        min_ts = 1551744000  # 2019-03-05 00:00:00 UTC
+        max_ts = 1554940800  # 2019-04-11 00:00:00 UTC
 
         if not min_ts <= int(rec.sgeRecord['end_time']) <= max_ts:
             Gratia.DebugPrint(debug_level, "skipping job number %s: not in time range" % rec.sgeRecord['job_number'])
@@ -348,6 +348,8 @@ def readsgefile(filename,docheckpoint,checkpoint,checkpointFile,max_records=-1,o
             Gratia.DebugPrint(debug_level, string.join(xmlRec.XmlData, " "))
 
         # send UsageRecord
+        print >>sys.stderr, "Sending... jobid=%s endtime=%s" % (
+                rec.sgeRecord['job_number'], rec.sgeRecord['end_time'])
         Gratia.Send(gratiaRec)
         sent += 1
 
