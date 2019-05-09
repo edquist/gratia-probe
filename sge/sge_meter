@@ -288,7 +288,7 @@ class SGE:
                 
 
 '''Read in the sge file and increment the checkpoint in the checkpointfile'''
-def readsgefile(filename,docheckpoint,checkpoint,checkpointFile,max_records=-1):
+def readsgefile(filename,docheckpoint,checkpoint,checkpointFile,max_records=-1,omit_jobids=set()):
     # print 'reading file',filename
     linecount = 0
     sent = 0
@@ -332,6 +332,9 @@ def readsgefile(filename,docheckpoint,checkpoint,checkpointFile,max_records=-1):
         max_ts = 1554742800  # 2019-04-08 17:00:00 UTC
 
         if not min_ts <= int(rec.sgeRecord['end_time']) <= max_ts:
+            continue
+
+        if rec.sgeRecord['job_number'] in omit_jobids:
             continue
 
         # convert sgeRecord into Gratia UsageRecord
@@ -397,6 +400,9 @@ def main():
                          help="Only reports records past checkpoint. Default is to report all records.")    
     optParser.add_option("-m", "--maxrecords", help="Send at most N records; default is to send all records.",
                          default=-1, dest="maxrecords")
+    optParser.add_option("-o", "--omit-jobids",
+                         action="store", dest="omit_jobids", type="string",
+                         help="path to file with job ids to omit" )
 
 
     
@@ -427,6 +433,11 @@ def main():
         accFileName = opts.accounting
     else:
         accFileName = defaultAccountingFile
+
+    if opts.omit_jobids:
+        omit_jobids = set( jobid.strip() for jobid in open(opts.omit_jobids) )
+    else:
+        omit_jobids = set()
 
     prevAccFileName=''
     # Set the default previous accounting file per the ProbeConfig file if attribute exists
@@ -498,7 +509,7 @@ def main():
             readsgefile(prevAccFileName,opts.checkpoint,checkpoint,checkpointFile)
             checkpoint=0
     Gratia.DebugPrint(verbose_level, "Looking at regular file. Checkpoint value at " + str(checkpoint))
-    readsgefile(accFileName,opts.checkpoint,checkpoint,checkpointFile,max_records)
+    readsgefile(accFileName,opts.checkpoint,checkpoint,checkpointFile,max_records,omit_jobids)
             
 
     # Clean things up
