@@ -505,7 +505,7 @@ def send_updates(opts):
     sqldb.commit()
 
     print("- sent %s records to gracc" % count_submit)
-    print("- deleted %s rows from outbox" % rc2)
+    print("- deleted %s rows from outbox" % count_delete)
 
 #   DebugPrint(2, "Number of usage records submitted: %d" % count_submit)
 #   DebugPrint(2, "Number of usage records found: %d" % count_found)
