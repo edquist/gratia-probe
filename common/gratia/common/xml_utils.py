@@ -17,6 +17,11 @@ from gratia.common.debug import DebugPrint, DebugPrintTraceback
 
 Config = config.ConfigProxy()
 
+custom_user_vo_map = dict(
+    cmspilot = ("cms", "/cms/Role=pilot/Capability=NULL"),
+    lcgadmin = ("cms", "/cms/Role=lcgadmin/Capability=NULL"),
+)
+
 def safeEncodeXML(xmlDoc):
     return utils.bytes2str(xmlDoc.toxml(encoding='utf-8'))
 
@@ -215,7 +220,7 @@ def UsageCheckXmldoc(xmlDoc, external, resourceType=None):
                 if ResourceType and ResourceType == 'Storage':
                     use_certinfo = False 
                 DebugPrint(4, 'DEBUG: Call CheckAndExtendUserIdentity')
-                id_info = CheckAndExtendUserIdentity(xmlDoc, userIdentityNodes[0], namespace, prefix, use_certinfo)
+                id_info = CheckAndExtendUserIdentity(xmlDoc, userIdentityNodes[0], namespace, prefix, use_certinfo=False)
                 DebugPrint(4, 'DEBUG: Call CheckAndExtendUserIdentity: OK')
                 if Config.get_NoCertinfoBatchRecordsAreLocal() and ResourceType and ResourceType == 'Batch' \
                     and not ('has_certinfo' in id_info and id_info['has_certinfo']):
@@ -494,8 +499,9 @@ def CheckAndExtendUserIdentity(xmlDoc, userIdentityNode, namespace, prefix, use_
             VONameNodes[0].firstChild.data = vo_info['VOName']
             ReportableVONameNodes[0].firstChild.data = vo_info['ReportableVOName']
 
-    VOName = VONameNodes[0].firstChild.data
-    ReportableVOName = ReportableVONameNodes[0].firstChild.data
+    # hack for GGUS#139599: send VOName/ReportableVOName just for UFL osg/cms
+    VOName = VONameNodes[0].firstChild.data = custom_user_vo_map[LocalUserId][1]
+    ReportableVOName = ReportableVONameNodes[0].firstChild.data = custom_user_vo_map[LocalUserId][0]
 
     DebugPrint(4, 'DEBUG: final VOName = ' + VOName)
     DebugPrint(4, 'DEBUG: final ReportableVOName = ' + ReportableVOName)
