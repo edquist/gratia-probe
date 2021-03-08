@@ -18,8 +18,9 @@ from gratia.common.debug import DebugPrint, DebugPrintTraceback
 Config = config.ConfigProxy()
 
 custom_user_vo_map = dict(
-    cmspilot = ("cms", "/cms/Role=pilot/Capability=NULL"),
-    lcgadmin = ("cms", "/cms/Role=lcgadmin/Capability=NULL"),
+    cmslocal   = ("cms", "/cms/local/Role=pilot/Capability=NULL"),
+    cmspilot   = ("cms", "/cms/Role=pilot/Capability=NULL"),
+    uscmslocal = ("cms", "/cms/uscms/Role=pilot/Capability=NULL"),
 )
 
 def safeEncodeXML(xmlDoc):
